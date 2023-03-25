@@ -1,13 +1,13 @@
 const { Configuration, OpenAIApi } = require("openai");
 const express = require("express");
-const cors = require("cors");
+var cors = require("cors");
 const app = express();
 require("dotenv").config();
 
 const apiKey = process.env.OPENAI_API_KEY;
 
 const configuration = new Configuration({
-  apiKey,
+  apiKey: apiKey,
 });
 const openai = new OpenAIApi(configuration);
 
@@ -24,7 +24,11 @@ app.use(express.urlencoded({ extended: true })); // for parsing application/x-ww
 
 // POST method route
 app.post("/fortuneTell", async function (req, res) {
-  let { userMessages, assistantMessages } = req.body;
+  let { myDateTime, userMessages, assistantMessages } = req.body;
+
+  let todayDateTime = new Date().toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
+  });
 
   let messages = [
     {
@@ -41,6 +45,14 @@ app.post("/fortuneTell", async function (req, res) {
       role: "assistant",
       content:
         "안녕하세요! 저는 챗도지입니다. 운세와 점성술에 관한 질문이 있으신가요? 어떤 것이든 물어보세요, 최선을 다해 답변해 드리겠습니다.",
+    },
+    {
+      role: "user",
+      content: `저의 생년월일과 태어난 시간은 ${myDateTime}입니다. 오늘은 ${todayDateTime}입니다.`,
+    },
+    {
+      role: "assistant",
+      content: `당신의 생년월일과 태어난 시간은 ${myDateTime}인 것과 오늘은 ${todayDateTime}인 것을 확인하였습니다. 운세에 대해서 어떤 것이든 물어보세요!`,
     },
   ];
 
