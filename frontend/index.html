@@ -1,16 +1,137 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>운세보는 챗도지</title>
+    <style>
+      body {
+        font-family: "SF Pro Display", "SF Pro Icons", "Helvetica Neue",
+          "Helvetica", "Arial", sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        height: 100vh;
+        margin: 0;
+        padding: 1rem;
+        background-color: #f0f0f0;
+      }
+
+      .chat-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        overflow-y: auto;
+        max-height: calc(100% - 50px);
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 5px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .message {
+        max-width: 60%;
+        padding: 8px 12px;
+        border-radius: 10px;
+      }
+
+      .user {
+        align-self: flex-end;
+        background-color: #007aff;
+        color: #fff;
+      }
+
+      .bot {
+        align-self: flex-start;
+        background-color: #e5e5e5;
+        color: #333;
+      }
+
+      form {
+        display: flex;
+        gap: 10px;
+        margin-top: 1rem;
+      }
+
+      input {
+        flex-grow: 1;
+        padding: 6px 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        outline: none;
+      }
+
+      button {
+        background-color: #007aff;
+        border: none;
+        border-radius: 5px;
+        color: white;
+        font-weight: bold;
+        padding: 8px 16px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #0066cc;
+      }
+
+      .loading {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+      }
+
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 5px solid rgba(0, 0, 0, 0.1);
+        border-top-color: #007aff;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
   </head>
   <body>
-    <h1></h1>
-    <button onclick="getFortune()">운세보기</button>
+    <div class="chat-container" id="chatContainer"></div>
+    <form id="questionForm">
+      <input type="text" id="question" placeholder="질문을 입력하세요..." />
+      <button type="submit">전송</button>
+    </form>
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+    </div>
     <script>
-      const getFortune = async () => {
+      const chatContainer = document.getElementById("chatContainer");
+      const questionForm = document.getElementById("questionForm");
+      const loading = document.getElementById("loading");
+
+      questionForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const question = document.getElementById("question").value;
+        if (!question) return;
+
+        addMessage("user", question);
+        document.getElementById("question").value = "";
+        loading.style.display = "flex";
+
         try {
           const response = await fetch("http://localhost:3000/fortune", {
             method: "POST",
@@ -18,15 +139,28 @@
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              name: "챗도지",
+              question,
             }),
           });
           const data = await response.json();
-          console.log(data);
+          addMessage("bot", data.assistant);
         } catch (error) {
-          console.log(error);
+          addMessage(
+            "bot",
+            "죄송합니다. 문제가 발생했습니다. 다시 시도해주세요."
+          );
+        } finally {
+          loading.style.display = "none";
         }
-      };
+      });
+
+      function addMessage(type, content) {
+        const message = document.createElement("div");
+        message.classList.add("message", type);
+        message.textContent = content;
+        chatContainer.appendChild(message);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
     </script>
   </body>
 </html>
